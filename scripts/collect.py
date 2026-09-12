@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Colector de liquidaciones crypto (Coinalyze API v1) -> docs/data/.
 
-- Agrega por moneda todos sus futuros perpetuos (USDT/USD/USDC) de todos los
-  exchanges que cubre Coinalyze.
+- Agrega por moneda todos sus futuros perpetuos con quote USD/USDT/USDC de
+  todos los exchanges que cubre Coinalyze (base_asset + is_perpetual).
 - Intervalo horario: upsert de las ultimas horas; backfill inicial ~62 dias
   (Coinalyze solo conserva 1500-2000 puntos intradia; el archivo del repo es
   el archivo historico definitivo).
@@ -13,7 +13,6 @@ error para no ensuciar el historial de Actions.
 """
 import json
 import os
-import re
 import sys
 import time
 import urllib.parse
@@ -52,10 +51,14 @@ def get(path, **params):
     time.sleep(max(1.0, 60.0 * n / RATE_WEIGHT_PER_MIN))
     return payload
 
-def perp_symbols(coin):
-    markets = get("future-markets")
-    pat = re.compile(rf"^{coin}(USDT|USD|USDC)_PERP\.")
-    return sorted({m["symbol"] for m in markets if pat.match(m.get("symbol", ""))})
+QUOTE_OK = {"USD", "USDT", "USDC"}  # excluye cruces (ETHBTC) y quotes exoticos
+
+def perp_symbols(coin, markets):
+    """Todos los perps de la moneda en cualquier exchange (quote USD/USDT/USDC)."""
+    return sorted({m["symbol"] for m in markets
+                   if m.get("base_asset") == coin
+                   and m.get("is_perpetual")
+                   and m.get("quote_asset") in QUOTE_OK})
 
 def fetch_liq(symbols, interval, ts_from, ts_to):
     """Devuelve {t: [long, short]} agregando todos los simbolos."""
@@ -89,9 +92,10 @@ def main():
     backfill = "--backfill" in sys.argv
     now = int(time.time())
     DATA.mkdir(parents=True, exist_ok=True)
+    markets = get("future-markets")
     meta_coins = []
     for coin in COINS:
-        syms = perp_symbols(coin)
+        syms = perp_symbols(coin, markets)
         if not syms:
             print(f"{coin}: sin mercados perp, se omite")
             continue
