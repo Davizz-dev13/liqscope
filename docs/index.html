@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LiqScope · Liquidaciones de futuros crypto</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root { --bg:#0d1117; --card:#161b22; --border:#30363d; --txt:#e6edf3; --mut:#8b949e;
+          --long:#f23645; --short:#2ebd85; --accent:#58a6ff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt);
+         font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  .wrap { max-width:920px; margin:0 auto; padding:20px 14px 40px; }
+  h1 { font-size:1.45rem; margin:0 0 2px; }
+  .sub { color:var(--mut); font-size:.85rem; margin-bottom:18px; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+  .seg { display:flex; background:var(--card); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .seg button { background:none; border:0; color:var(--mut); padding:8px 14px; font-size:.85rem; cursor:pointer; }
+  .seg button.on { background:#21262d; color:var(--txt); font-weight:600; }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:14px; }
+  .kpi { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
+  .kpi .v { font-size:1.35rem; font-weight:700; font-variant-numeric:tabular-nums; }
+  .kpi .l { color:var(--mut); font-size:.75rem; margin-top:2px; }
+  .v.long { color:var(--long); } .v.short { color:var(--short); }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:14px; }
+  .card h2 { font-size:.95rem; margin:0 0 10px; color:var(--txt); }
+  .note { color:var(--mut); font-size:.78rem; margin-top:8px; }
+  table { width:100%; border-collapse:collapse; font-size:.82rem; }
+  th, td { text-align:right; padding:6px 8px; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums; }
+  th:first-child, td:first-child { text-align:left; }
+  th { color:var(--mut); font-weight:500; }
+  .partial { color:var(--accent); font-size:.75rem; }
+  canvas { width:100% !important; }
+  a { color:var(--accent); text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>LiqScope</h1>
+  <div class="sub">Liquidaciones de futuros perpetuos · largos vs cortos · <span id="upd">cargando…</span></div>
+
+  <div class="row">
+    <div class="seg" id="coins"></div>
+    <div class="seg" id="periods"></div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="v" id="kTotal">–</div><div class="l" id="kTotalL">Total liquidado</div></div>
+    <div class="kpi"><div class="v long" id="kLong">–</div><div class="l">Largos liquidados</div></div>
+    <div class="kpi"><div class="v short" id="kShort">–</div><div class="l">Cortos liquidados</div></div>
+    <div class="kpi"><div class="v" id="kRatio">–</div><div class="l">% largos / cortos</div></div>
+  </div>
+
+  <div class="card">
+    <h2 id="chartTitle">–</h2>
+    <canvas id="chart" height="260"></canvas>
+    <div class="note" id="chartNote"></div>
+  </div>
+
+  <div class="card">
+    <h2>Máximos del periodo</h2>
+    <table id="top"><thead><tr><th>Hora (Madrid)</th><th>Largos</th><th>Cortos</th><th>Total</th></tr></thead><tbody></tbody></table>
+  </div>
+
+  <div class="note">
+    Fuente: <a href="https://www.coinalyze.com" target="_blank" rel="noopener">Coinalyze</a>, agregando todos los
+    perpetuos de la moneda en todos los exchanges cubiertos. Actualización cada hora.
+    Histórico diario completo; histórico horario archivado en este repo desde su puesta en marcha.
+    Proyecto personal, no es asesoramiento financiero.
+  </div>
+</div>
+
+<script>
+const TZ = 'Europe/Madrid';
+const PERIODS = [
+  {id:'1h', label:'Hora',   hours:1,   chartHours:48,  gran:'h', title:'Últimas 48 horas (por hora)'},
+  {id:'24h',label:'Día',    hours:24,  chartHours:168, gran:'h', title:'Últimos 7 días (por hora)'},
+  {id:'7d', label:'Semana', hours:168, chartHours:720, gran:'d', title:'Últimos 30 días (por día)'},
+  {id:'30d',label:'Mes',    hours:720, chartHours:99999,gran:'d', title:'Histórico diario completo'},
+];
+let coins = [], coin = 'BTC', period = '1h', cache = {}, chart;
+
+const $ = s => document.querySelector(s);
+const fmt = v => v >= 1e9 ? '$'+(v/1e9).toFixed(2)+'B' : v >= 1e6 ? '$'+(v/1e6).toFixed(1)+'M'
+             : v >= 1e3 ? '$'+(v/1e3).toFixed(1)+'K' : '$'+v.toFixed(0);
+const dstr = (t, gran) => new Date(t*1000).toLocaleString('es-ES',
+  gran==='h' ? {timeZone:TZ, day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}
+             : {timeZone:TZ, day:'2-digit', month:'2-digit', year:'2-digit'});
+
+async function boot() {
+  const meta = await (await fetch('data/meta.json?ts='+Date.now())).json();
+  coins = meta.coins.map(c => c.coin);
+  $('#upd').textContent = 'actualizado ' + new Date(meta.generated_at)
+    .toLocaleString('es-ES', {timeZone:TZ, day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) + ' (Madrid)';
+  buildSeg($('#coins'), coins, c => { coin = c; render(); }, () => coin);
+  buildSeg($('#periods'), PERIODS.map(p => p.label), (l, i) => { period = PERIODS[i].id; render(); }, () => PERIODS.find(p => p.id === period).label);
+  render();
+}
+function buildSeg(el, labels, onpick, current) {
+  el.innerHTML = '';
+  labels.forEach((l, i) => {
+    const b = document.createElement('button');
+    b.textContent = l;
+    if (l === current()) b.classList.add('on');
+    b.onclick = () => { onpick(l, i); [...el.children].forEach(x => x.classList.remove('on')); b.classList.add('on'); };
+    el.appendChild(b);
+  });
+}
+async function dataFor(c) {
+  if (!cache[c]) cache[c] = await (await fetch('data/'+c.toLowerCase()+'.json?ts='+Date.now())).json();
+  return cache[c];
+}
+async function render() {
+  const d = await dataFor(coin);
+  const p = PERIODS.find(x => x.id === period);
+  const now = Math.floor(Date.now()/1000);
+  const h0 = now - p.hours*3600;
+  const pts = d.hourly.filter(r => r[0] >= h0);
+  const L = pts.reduce((a,r) => a+r[1], 0), S = pts.reduce((a,r) => a+r[2], 0);
+  $('#kTotal').textContent = fmt(L+S);
+  $('#kTotalL').textContent = 'Total liquidado · ' + p.label.toLowerCase();
+  $('#kLong').textContent = fmt(L); $('#kShort').textContent = fmt(S);
+  const tot = L+S;
+  $('#kRatio').textContent = tot ? (100*L/tot).toFixed(0)+'% / '+(100*S/tot).toFixed(0)+'%' : '–';
+
+  // grafico de contexto
+  let cpts, labels, note = '';
+  if (p.gran === 'h') {
+    cpts = d.hourly.filter(r => r[0] >= now - p.chartHours*3600);
+    labels = cpts.map(r => dstr(r[0], 'h'));
+    const cur = cpts.length && (now - cpts[cpts.length-1][0] < 3600);
+    if (cur) note = 'La última barra es la hora en curso (parcial).';
+  } else {
+    cpts = d.daily.filter(r => r[0] >= now - p.chartHours*3600);
+    labels = cpts.map(r => dstr(r[0], 'd'));
+    note = 'El último día puede estar en curso (parcial).';
+  }
+  $('#chartTitle').textContent = coin + ' · ' + p.title;
+  $('#chartNote').textContent = note + ' Agregado de ' + d.exchanges + ' perpetuos.';
+  draw(labels, cpts.map(r => r[1]), cpts.map(r => r[2]));
+
+  // top 5 horas del periodo
+  const top = [...pts].sort((a,b) => (b[1]+b[2])-(a[1]+a[2])).slice(0,5);
+  $('#top tbody').innerHTML = top.map(r =>
+    '<tr><td>'+dstr(r[0],'h')+'</td><td style="color:var(--long)">'+fmt(r[1])+'</td><td style="color:var(--short)">'+fmt(r[2])+'</td><td><b>'+fmt(r[1]+r[2])+'</b></td></tr>').join('')
+    || '<tr><td colspan="4">Sin datos todavía — el colector empieza cuando exista la API key.</td></tr>';
+}
+function draw(labels, longs, shorts) {
+  if (chart) chart.destroy();
+  chart = new Chart($('#chart'), {type:'bar', data:{labels, datasets:[
+    {label:'Largos', data:longs, backgroundColor:'#f23645'},
+    {label:'Cortos', data:shorts, backgroundColor:'#2ebd85'}]},
+    options:{responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+      scales:{x:{stacked:true, ticks:{color:'#8b949e', maxTicksLimit:10}, grid:{display:false}},
+              y:{stacked:true, ticks:{color:'#8b949e', callback:v=>fmt(v)}, grid:{color:'#21262d'}}},
+      plugins:{legend:{labels:{color:'#e6edf3'}},
+        tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmt(c.parsed.y)}}}}});
+  $('#chart').parentElement.style.height = '300px';
+}
+boot().catch(e => { $('#upd').textContent = 'sin datos todavía — falta la API key de Coinalyze'; });
+</script>
+</body>
+</html>
