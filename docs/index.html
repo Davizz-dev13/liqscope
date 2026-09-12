@@ -32,6 +32,7 @@
   th { color:var(--mut); font-weight:500; }
   .partial { color:var(--accent); font-size:.75rem; }
   canvas { width:100% !important; }
+  .chart-wrap { position:relative; height:280px; }
   a { color:var(--accent); text-decoration:none; }
 </style>
 </head>
@@ -54,7 +55,7 @@
 
   <div class="card">
     <h2 id="chartTitle">–</h2>
-    <canvas id="chart" height="260"></canvas>
+    <div class="chart-wrap"><canvas id="chart"></canvas></div>
     <div class="note" id="chartNote"></div>
   </div>
 
@@ -141,7 +142,8 @@ async function render() {
   draw(labels, cpts.map(r => r[1]), cpts.map(r => r[2]));
 
   // top 5 horas del periodo
-  const top = [...pts].sort((a,b) => (b[1]+b[2])-(a[1]+a[2])).slice(0,5);
+  const topSrc = p.hours < 24 ? cpts : pts;
+  const top = [...topSrc].sort((a,b) => (b[1]+b[2])-(a[1]+a[2])).slice(0,5);
   $('#top tbody').innerHTML = top.map(r =>
     '<tr><td>'+dstr(r[0],'h')+'</td><td style="color:var(--long)">'+fmt(r[1])+'</td><td style="color:var(--short)">'+fmt(r[2])+'</td><td><b>'+fmt(r[1]+r[2])+'</b></td></tr>').join('')
     || '<tr><td colspan="4">Sin datos todavía — el colector empieza cuando exista la API key.</td></tr>';
@@ -156,7 +158,6 @@ function draw(labels, longs, shorts) {
               y:{stacked:true, ticks:{color:'#8b949e', callback:v=>fmt(v)}, grid:{color:'#21262d'}}},
       plugins:{legend:{labels:{color:'#e6edf3'}},
         tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmt(c.parsed.y)}}}}});
-  $('#chart').parentElement.style.height = '300px';
 }
 boot().catch(e => { $('#upd').textContent = 'sin datos todavía — falta la API key de Coinalyze'; });
 </script>
