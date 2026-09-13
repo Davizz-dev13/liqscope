@@ -2,8 +2,12 @@ name: Recolectar liquidaciones
 
 on:
   schedule:
-    # cada hora en el minuto 23
-    - cron: '23 * * * *'
+    # 4 oportunidades por hora: GitHub atrasa/descarta crons bajo carga;
+    # el colector es idempotente (upsert), asi que redundancia = frescura
+    - cron: '9 * * * *'
+    - cron: '24 * * * *'
+    - cron: '39 * * * *'
+    - cron: '54 * * * *'
   workflow_dispatch:
     inputs:
       backfill:
