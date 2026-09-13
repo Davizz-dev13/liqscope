@@ -34,15 +34,24 @@ RATE_WEIGHT_PER_MIN = 40  # peso por minuto; cada simbolo pesa 1
 def get(path, **params):
     qs = urllib.parse.urlencode(params)
     req = urllib.request.Request(f"{API}/{path}?{qs}", headers={"api_key": KEY})
-    for attempt in range(4):
+    last_err = None
+    for attempt in range(6):
         try:
             with urllib.request.urlopen(req, timeout=60) as r:
                 payload = json.load(r)
             break
         except urllib.error.HTTPError as e:
-            if e.code == 429 and attempt < 3:
-                wait = 20 * (attempt + 1)
+            if e.code == 429 and attempt < 5:
+                wait = 30 * (attempt + 1)
                 print(f"429 rate limit, reintento en {wait}s", flush=True)
+                time.sleep(wait)
+                continue
+            raise
+        except urllib.error.URLError as e:
+            last_err = e
+            if attempt < 5:
+                wait = 20 * (attempt + 1)
+                print(f"error de red ({e}), reintento en {wait}s", flush=True)
                 time.sleep(wait)
                 continue
             raise
