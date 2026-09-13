@@ -31,6 +31,8 @@
   th:first-child, td:first-child { text-align:left; }
   th { color:var(--mut); font-weight:500; }
   .partial { color:var(--accent); font-size:.75rem; }
+  select#monthPick { background:var(--card); border:1px solid var(--border); color:var(--txt);
+    border-radius:8px; padding:8px 10px; font-size:.85rem; font-family:inherit; }
   canvas { width:100% !important; }
   .chart-wrap { position:relative; height:280px; }
   a { color:var(--accent); text-decoration:none; }
@@ -44,6 +46,7 @@
   <div class="row">
     <div class="seg" id="coins"></div>
     <div class="seg" id="periods"></div>
+    <select id="monthPick" style="display:none"></select>
   </div>
 
   <div class="kpis">
@@ -81,6 +84,7 @@ const PERIODS = [
   {id:'30d',label:'Mes',    hours:720, chartHours:99999,gran:'d', title:'Histórico diario completo'},
 ];
 let coins = [], coin = 'BTC', period = '1h', cache = {}, chart;
+let monthSel = '', monthsBuiltFor = '';
 
 const $ = s => document.querySelector(s);
 const fmt = v => v >= 1e9 ? '$'+(v/1e9).toFixed(2)+'B' : v >= 1e6 ? '$'+(v/1e6).toFixed(1)+'M'
@@ -112,40 +116,81 @@ async function dataFor(c) {
   if (!cache[c]) cache[c] = await (await fetch('data/'+c.toLowerCase()+'.json?ts='+Date.now())).json();
   return cache[c];
 }
+const ymdf = new Intl.DateTimeFormat('es-ES', {timeZone:TZ, year:'numeric', month:'2-digit'});
+function ymKey(t) {
+  const ps = ymdf.formatToParts(new Date(t*1000));
+  return ps.find(x => x.type === 'year').value + '-' + ps.find(x => x.type === 'month').value;
+}
+function monthLabel(m) {
+  const [y, mo] = m.split('-').map(Number);
+  return new Date(Date.UTC(y, mo - 1, 1)).toLocaleString('es-ES', {timeZone:'UTC', month:'long', year:'numeric'});
+}
+function buildMonths(d) {
+  const mp = $('#monthPick');
+  if (monthsBuiltFor === coin) { mp.value = monthSel; return; }
+  monthsBuiltFor = coin;
+  const months = [...new Set(d.daily.map(r => ymKey(r[0])))].sort().reverse();
+  if (!months.includes(monthSel)) monthSel = '';
+  mp.innerHTML = '<option value="">Histórico completo</option>' +
+    months.map(m => '<option value="' + m + '">' + monthLabel(m) + '</option>').join('');
+  mp.value = monthSel;
+  mp.onchange = () => { monthSel = mp.value; render(); };
+}
 async function render() {
   const d = await dataFor(coin);
   const p = PERIODS.find(x => x.id === period);
   const now = Math.floor(Date.now()/1000);
   const h0 = now - p.hours*3600;
   const pts = d.hourly.filter(r => r[0] >= h0);
-  const L = pts.reduce((a,r) => a+r[1], 0), S = pts.reduce((a,r) => a+r[2], 0);
-  $('#kTotal').textContent = fmt(L+S);
-  $('#kTotalL').textContent = 'Total liquidado · ' + p.label.toLowerCase();
-  $('#kLong').textContent = fmt(L); $('#kShort').textContent = fmt(S);
-  const tot = L+S;
-  $('#kRatio').textContent = tot ? (100*L/tot).toFixed(0)+'% / '+(100*S/tot).toFixed(0)+'%' : '–';
+  const mp = $('#monthPick');
+  let L = pts.reduce((a,r) => a+r[1], 0), S = pts.reduce((a,r) => a+r[2], 0);
+  let klabel = 'Total liquidado · ' + p.label.toLowerCase();
+  let title = p.title, topGran = 'h';
 
   // grafico de contexto
   let cpts, labels, note = '';
   if (p.gran === 'h') {
+    mp.style.display = 'none'; monthSel = '';
     cpts = d.hourly.filter(r => r[0] >= now - p.chartHours*3600);
     labels = cpts.map(r => dstr(r[0], 'h'));
     const cur = cpts.length && (now - cpts[cpts.length-1][0] < 3600);
     if (cur) note = 'La última barra es la hora en curso (parcial).';
+  } else if (period === '30d') {
+    mp.style.display = '';
+    buildMonths(d);
+    if (monthSel) {
+      cpts = d.daily.filter(r => ymKey(r[0]) === monthSel);
+      const ml = monthLabel(monthSel);
+      title = ml.charAt(0).toUpperCase() + ml.slice(1) + ' (por día)';
+      klabel = 'Total liquidado · ' + ml;
+      L = cpts.reduce((a,r) => a+r[1], 0); S = cpts.reduce((a,r) => a+r[2], 0);
+      topGran = 'd';
+    } else {
+      cpts = d.daily.filter(r => r[0] >= now - p.chartHours*3600);
+      note = 'El último día puede estar en curso (parcial).';
+    }
+    labels = cpts.map(r => dstr(r[0], 'd'));
   } else {
+    mp.style.display = 'none'; monthSel = '';
     cpts = d.daily.filter(r => r[0] >= now - p.chartHours*3600);
     labels = cpts.map(r => dstr(r[0], 'd'));
     note = 'El último día puede estar en curso (parcial).';
   }
-  $('#chartTitle').textContent = coin + ' · ' + p.title;
+  $('#kTotal').textContent = fmt(L+S);
+  $('#kTotalL').textContent = klabel;
+  $('#kLong').textContent = fmt(L); $('#kShort').textContent = fmt(S);
+  const tot = L+S;
+  $('#kRatio').textContent = tot ? (100*L/tot).toFixed(0)+'% / '+(100*S/tot).toFixed(0)+'%' : '–';
+  $('#chartTitle').textContent = coin + ' · ' + title;
   $('#chartNote').textContent = note + ' Agregado de ' + d.exchanges + ' perpetuos.';
   draw(labels, cpts.map(r => r[1]), cpts.map(r => r[2]));
 
-  // top 5 horas del periodo
-  const topSrc = p.hours < 24 ? cpts : pts;
+  // top 5 del periodo
+  const topSrc = p.hours < 24 ? cpts : (topGran === 'd' ? cpts : pts);
+  $('#top th:first-child').textContent = topGran === 'd' ? 'Día (Madrid)' : 'Hora (Madrid)';
   const top = [...topSrc].sort((a,b) => (b[1]+b[2])-(a[1]+a[2])).slice(0,5);
   $('#top tbody').innerHTML = top.map(r =>
-    '<tr><td>'+dstr(r[0],'h')+'</td><td style="color:var(--long)">'+fmt(r[1])+'</td><td style="color:var(--short)">'+fmt(r[2])+'</td><td><b>'+fmt(r[1]+r[2])+'</b></td></tr>').join('')
+    '<tr><td>'+dstr(r[0],topGran)+'</td><td style="color:var(--long)">'+fmt(r[1])+'</td><td style="color:var(--short)">'+fmt(r[2])+'</td><td><b>'+fmt(r[1]+r[2])+'</b></td></tr>').join('')
     || '<tr><td colspan="4">Sin datos todavía — el colector empieza cuando exista la API key.</td></tr>';
 }
 function draw(labels, longs, shorts) {
