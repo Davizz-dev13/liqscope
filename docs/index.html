@@ -31,7 +31,7 @@
   th:first-child, td:first-child { text-align:left; }
   th { color:var(--mut); font-weight:500; }
   .partial { color:var(--accent); font-size:.75rem; }
-  select#monthPick { background:var(--card); border:1px solid var(--border); color:var(--txt);
+  select#yearPick, select#monthPick { background:var(--card); border:1px solid var(--border); color:var(--txt);
     border-radius:8px; padding:8px 10px; font-size:.85rem; font-family:inherit; }
   canvas { width:100% !important; }
   .chart-wrap { position:relative; height:280px; }
@@ -46,7 +46,8 @@
   <div class="row">
     <div class="seg" id="coins"></div>
     <div class="seg" id="periods"></div>
-    <select id="monthPick" style="display:none"></select>
+    <select id="yearPick" title="Año"></select>
+    <select id="monthPick" title="Mes"></select>
   </div>
 
   <div class="kpis">
@@ -84,7 +85,7 @@ const PERIODS = [
   {id:'30d',label:'Mes',    hours:720, chartHours:99999,gran:'d', title:'Histórico diario completo'},
 ];
 let coins = [], coin = 'BTC', period = '1h', cache = {}, chart;
-let monthSel = '', monthsBuiltFor = '';
+let yearSel = '', monthSel = '', pickersBuiltFor = '';
 
 const $ = s => document.querySelector(s);
 const fmt = v => v >= 1e9 ? '$'+(v/1e9).toFixed(2)+'B' : v >= 1e6 ? '$'+(v/1e6).toFixed(1)+'M'
@@ -119,22 +120,39 @@ async function dataFor(c) {
 const ymdf = new Intl.DateTimeFormat('es-ES', {timeZone:TZ, year:'numeric', month:'2-digit'});
 function ymKey(t) {
   const ps = ymdf.formatToParts(new Date(t*1000));
-  return ps.find(x => x.type === 'year').value + '-' + ps.find(x => x.type === 'month').value;
+  return ps.find(x => x.type === 'year').value + '-' + ps.find(x => x.type === 'month').value.padStart(2, '0');
 }
-function monthLabel(m) {
-  const [y, mo] = m.split('-').map(Number);
-  return new Date(Date.UTC(y, mo - 1, 1)).toLocaleString('es-ES', {timeZone:'UTC', month:'long', year:'numeric'});
+function monthName(mo) {
+  return new Date(Date.UTC(2000, Number(mo) - 1, 1)).toLocaleString('es-ES', {timeZone:'UTC', month:'long'});
 }
-function buildMonths(d) {
-  const mp = $('#monthPick');
-  if (monthsBuiltFor === coin) { mp.value = monthSel; return; }
-  monthsBuiltFor = coin;
-  const months = [...new Set(d.daily.map(r => ymKey(r[0])))].sort().reverse();
-  if (!months.includes(monthSel)) monthSel = '';
-  mp.innerHTML = '<option value="">Histórico completo</option>' +
-    months.map(m => '<option value="' + m + '">' + monthLabel(m) + '</option>').join('');
+function markSeg(el, label) {
+  [...el.children].forEach(x => x.classList.toggle('on', x.textContent === label));
+}
+function buildPickers(d) {
+  const yp = $('#yearPick'), mp = $('#monthPick');
+  const keys = [...new Set(d.daily.map(r => ymKey(r[0])))].sort();
+  const byYear = {};
+  keys.forEach(k => { const [y, m] = k.split('-'); (byYear[y] = byYear[y] || []).push(m); });
+  const years = Object.keys(byYear).sort().reverse();
+  if (!years.includes(yearSel)) yearSel = years[0];
+  const avail = byYear[yearSel] || [];
+  if (!avail.includes(monthSel)) monthSel = '';
+  if (pickersBuiltFor !== coin) { pickersBuiltFor = coin; }
+  yp.innerHTML = years.map(y => '<option value="' + y + '">' + y + '</option>').join('');
+  yp.value = yearSel;
+  mp.innerHTML = '<option value="">Todos los meses</option>' +
+    avail.map(m => '<option value="' + m + '">' + monthName(m) + '</option>').join('');
   mp.value = monthSel;
-  mp.onchange = () => { monthSel = mp.value; render(); };
+  yp.onchange = () => {
+    yearSel = yp.value; monthSel = '';
+    buildPickers(d);
+    if (period === '30d') render();
+  };
+  mp.onchange = () => {
+    monthSel = mp.value;
+    if (monthSel) { period = '30d'; markSeg($('#periods'), 'Mes'); }
+    render();
+  };
 }
 async function render() {
   const d = await dataFor(coin);
@@ -149,18 +167,17 @@ async function render() {
 
   // grafico de contexto
   let cpts, labels, note = '';
+  buildPickers(d);
   if (p.gran === 'h') {
-    mp.style.display = 'none'; monthSel = '';
+    monthSel = ''; mp.value = '';
     cpts = d.hourly.filter(r => r[0] >= now - p.chartHours*3600);
     labels = cpts.map(r => dstr(r[0], 'h'));
     const cur = cpts.length && (now - cpts[cpts.length-1][0] < 3600);
     if (cur) note = 'La última barra es la hora en curso (parcial).';
   } else if (period === '30d') {
-    mp.style.display = '';
-    buildMonths(d);
     if (monthSel) {
-      cpts = d.daily.filter(r => ymKey(r[0]) === monthSel);
-      const ml = monthLabel(monthSel);
+      cpts = d.daily.filter(r => ymKey(r[0]) === yearSel + '-' + monthSel);
+      const ml = monthName(monthSel) + ' de ' + yearSel;
       title = ml.charAt(0).toUpperCase() + ml.slice(1) + ' (por día)';
       klabel = 'Total liquidado · ' + ml;
       L = cpts.reduce((a,r) => a+r[1], 0); S = cpts.reduce((a,r) => a+r[2], 0);
@@ -171,7 +188,7 @@ async function render() {
     }
     labels = cpts.map(r => dstr(r[0], 'd'));
   } else {
-    mp.style.display = 'none'; monthSel = '';
+    monthSel = ''; mp.value = '';
     cpts = d.daily.filter(r => r[0] >= now - p.chartHours*3600);
     labels = cpts.map(r => dstr(r[0], 'd'));
     note = 'El último día puede estar en curso (parcial).';
