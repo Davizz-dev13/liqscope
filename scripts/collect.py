@@ -27,7 +27,7 @@ COINS = ["BTC", "ETH", "SOL", "DOGE", "XRP"]
 DATA = Path("docs/data")
 BACKFILL_SECONDS = 62 * 86400
 DAILY_SINCE = 1567296000  # 2019-09-01, arranque de los perps de BTC
-REFETCH_HOURS = 8         # horas que se releen en cada corrida (upsert)
+REFETCH_HOURS = 36        # horas que se releen en cada corrida (upsert; cubre huecos de crons perdidos)
 MAX_SYMS_PER_CALL = 20    # limite de la API
 RATE_WEIGHT_PER_MIN = 40  # peso por minuto; cada simbolo pesa 1
 
