@@ -18,6 +18,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: collect
+  cancel-in-progress: false
+
 jobs:
   collect:
     runs-on: ubuntu-latest
@@ -41,4 +45,10 @@ jobs:
           git config user.email "Davizz-dev13@users.noreply.github.com"
           git add docs/data
           git diff --cached --quiet || git commit -m "Datos de liquidaciones: $(date -u +%Y-%m-%d\ %H:00) UTC"
-          git push
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push && exit 0
+            git rebase --abort 2>/dev/null || true
+            sleep 20
+          done
+          echo "No se pudo subir el commit de datos tras 3 intentos" >&2
+          exit 1
