@@ -159,10 +159,18 @@ async function render() {
   const p = PERIODS.find(x => x.id === period);
   const now = Math.floor(Date.now()/1000);
   const h0 = now - p.hours*3600;
-  const pts = d.hourly.filter(r => r[0] >= h0);
+  // en la vista Hora, las tarjetas muestran la ultima hora CERRADA (no la ventana movil)
+  const curH = Math.floor(now/3600)*3600;
+  const pts = p.id === '1h'
+    ? d.hourly.filter(r => r[0] >= curH - 3600 && r[0] < curH)
+    : d.hourly.filter(r => r[0] >= h0);
   const mp = $('#monthPick');
   let L = pts.reduce((a,r) => a+r[1], 0), S = pts.reduce((a,r) => a+r[2], 0);
   let klabel = 'Total liquidado · ' + p.label.toLowerCase();
+  if (p.id === '1h') {
+    const fmtH = t => new Date(t*1000).toLocaleString('es-ES', {timeZone:TZ, hour:'2-digit', minute:'2-digit'});
+    klabel = 'Hora cerrada ' + fmtH(curH - 3600) + '-' + fmtH(curH);
+  }
   let title = p.title, topGran = 'h';
 
   // grafico de contexto
