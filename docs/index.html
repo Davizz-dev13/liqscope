@@ -5,37 +5,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>LiqScope · Liquidaciones de futuros crypto</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#0d1117; --card:#161b22; --border:#30363d; --txt:#e6edf3; --mut:#8b949e;
-          --long:#f23645; --short:#2ebd85; --accent:#58a6ff; }
+  :root { --ink:#2a170f; --cream:#f4ecd8; --paper:#faf5e7; --orange:#d96b2a; --yellow:#eab619; --teal:#35858a; --mut:#7a6a58; --line:#d8cdb2;
+          --long:#d9402f; --short:#35855a; }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--txt);
-         font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  body { margin:0; background:var(--cream); color:var(--ink);
+         font-family:'DM Sans',-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
   .wrap { max-width:920px; margin:0 auto; padding:20px 14px 40px; }
-  h1 { font-size:1.45rem; margin:0 0 2px; }
+  h1 { font-size:1.7rem; margin:0 0 2px; font-family:'Bungee',sans-serif; font-weight:400; letter-spacing:.01em; }
   .sub { color:var(--mut); font-size:.85rem; margin-bottom:18px; }
   .row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
-  .seg { display:flex; background:var(--card); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
-  .seg button { background:none; border:0; color:var(--mut); padding:8px 14px; font-size:.85rem; cursor:pointer; }
-  .seg button.on { background:#21262d; color:var(--txt); font-weight:600; }
+  .seg { display:flex; background:var(--paper); border:3px solid var(--ink); border-radius:0; overflow:hidden; }
+  .seg button { background:none; border:0; border-right:2px solid var(--ink); color:var(--ink); padding:8px 14px; font-size:.78rem; font-family:'Bungee',sans-serif; letter-spacing:.03em; cursor:pointer; }
+  .seg button:last-child { border-right:0; }
+  .seg button.on { background:var(--orange); color:var(--cream); font-weight:400; }
   .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:14px; }
-  .kpi { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
+  .kpi { background:var(--paper); border:3px solid var(--ink); border-radius:0; padding:12px 14px; }
   .kpi .v { font-size:1.35rem; font-weight:700; font-variant-numeric:tabular-nums; }
   .kpi .l { color:var(--mut); font-size:.75rem; margin-top:2px; }
   .v.long { color:var(--long); } .v.short { color:var(--short); }
-  .card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:14px; }
-  .card h2 { font-size:.95rem; margin:0 0 10px; color:var(--txt); }
+  .card { background:var(--paper); border:3px solid var(--ink); border-radius:0; padding:14px; margin-bottom:14px; }
+  .card h2 { font-size:.85rem; margin:0 0 10px; color:var(--ink); font-family:'Bungee',sans-serif; font-weight:400; letter-spacing:.04em; text-transform:uppercase; }
   .note { color:var(--mut); font-size:.78rem; margin-top:8px; }
   table { width:100%; border-collapse:collapse; font-size:.82rem; }
-  th, td { text-align:right; padding:6px 8px; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums; }
+  th, td { text-align:right; padding:6px 8px; border-bottom:2px solid var(--line); font-variant-numeric:tabular-nums; }
   th:first-child, td:first-child { text-align:left; }
-  th { color:var(--mut); font-weight:500; }
-  .partial { color:var(--accent); font-size:.75rem; }
-  select#yearPick, select#monthPick { background:var(--card); border:1px solid var(--border); color:var(--txt);
-    border-radius:8px; padding:8px 10px; font-size:.85rem; font-family:inherit; }
+  th { color:var(--cream); font-weight:400; font-family:'Bungee',sans-serif; font-size:.68rem; letter-spacing:.04em; background:var(--ink); }
+  .partial { color:var(--teal); font-size:.75rem; }
+  select#yearPick, select#monthPick { background:var(--paper); border:3px solid var(--ink); color:var(--ink);
+    border-radius:0; padding:8px 10px; font-size:.85rem; font-family:'Bungee',sans-serif; }
   canvas { width:100% !important; }
   .chart-wrap { position:relative; height:280px; }
-  a { color:var(--accent); text-decoration:none; }
+  a { color:var(--orange); text-decoration:none; border-bottom:2px solid var(--orange); }
+  a:hover { color:var(--ink); border-color:var(--ink); }
 </style>
 </head>
 <body>
@@ -221,12 +225,12 @@ async function render() {
 function draw(labels, longs, shorts) {
   if (chart) chart.destroy();
   chart = new Chart($('#chart'), {type:'bar', data:{labels, datasets:[
-    {label:'Largos', data:longs, backgroundColor:'#f23645'},
-    {label:'Cortos', data:shorts, backgroundColor:'#2ebd85'}]},
+    {label:'Largos', data:longs, backgroundColor:'#d9402f'},
+    {label:'Cortos', data:shorts, backgroundColor:'#35855a'}]},
     options:{responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
-      scales:{x:{stacked:true, ticks:{color:'#8b949e', maxTicksLimit:10}, grid:{display:false}},
-              y:{stacked:true, ticks:{color:'#8b949e', callback:v=>fmt(v)}, grid:{color:'#21262d'}}},
-      plugins:{legend:{labels:{color:'#e6edf3'}},
+      scales:{x:{stacked:true, ticks:{color:'#7a6a58', maxTicksLimit:10}, grid:{display:false}},
+              y:{stacked:true, ticks:{color:'#7a6a58', callback:v=>fmt(v)}, grid:{color:'#e3d9c0'}}},
+      plugins:{legend:{labels:{color:'#2a170f'}},
         tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmt(c.parsed.y)}}}}});
 }
 boot().catch(e => { $('#upd').textContent = 'sin datos todavía — falta la API key de Coinalyze'; });
