@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-19T23:25:39+00:00",
+  "generated_at": "2026-09-19T23:39:49+00:00",
   "source": "Coinalyze API v1 (agregado de todos los exchanges por moneda)",
   "coins": [
     {
@@ -29,7 +29,7 @@
     {
       "coin": "XRP",
       "symbols": 21,
-      "hourly_points": 1580,
+      "hourly_points": 1581,
       "daily_points": 2363
     }
   ]
