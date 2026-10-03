@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-10-03T02:17:46+00:00",
+  "generated_at": "2026-10-03T02:28:10+00:00",
   "source": "Coinalyze API v1 (agregado de todos los exchanges por moneda)",
   "coins": [
     {
       "coin": "BTC",
       "symbols": 24,
-      "hourly_points": 1972,
+      "hourly_points": 1973,
       "daily_points": 2404
     },
     {
@@ -23,13 +23,13 @@
     {
       "coin": "DOGE",
       "symbols": 21,
-      "hourly_points": 1797,
+      "hourly_points": 1798,
       "daily_points": 2206
     },
     {
       "coin": "XRP",
       "symbols": 21,
-      "hourly_points": 1892,
+      "hourly_points": 1893,
       "daily_points": 2377
     }
   ]
