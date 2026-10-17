@@ -6,40 +6,44 @@
 <title>LiqScope · Liquidaciones de futuros crypto</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bungee&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=IM+Fell+DW+Pica&display=swap" rel="stylesheet">
 <style>
-  :root { --ink:#2a170f; --cream:#f4ecd8; --paper:#faf5e7; --orange:#d96b2a; --yellow:#eab619; --teal:#35858a; --mut:#7a6a58; --line:#d8cdb2;
-          --long:#d9402f; --short:#35855a; }
+  :root { --bg:#15110d; --card:#1f1913; --border:#3a3026; --text:#f3f1ed; --mut:rgba(255,255,255,.56);
+          --acc:#d4a85a; --long:#df8c70; --short:#b6bc86;
+          --serif:'IM Fell DW Pica',Georgia,serif; --sans:'Hanken Grotesk',-apple-system,'Segoe UI',Roboto,Arial,sans-serif; }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--cream); color:var(--ink);
-         font-family:'DM Sans',-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  body { margin:0; color:var(--text); font-family:var(--sans); -webkit-font-smoothing:antialiased;
+         background:radial-gradient(120% 60% at 50% 0%,#2b2118 0%,#15110d 55%) no-repeat,#15110d; }
   .wrap { max-width:920px; margin:0 auto; padding:20px 14px 40px; }
-  h1 { font-size:1.7rem; margin:0 0 2px; font-family:'Bungee',sans-serif; font-weight:400; letter-spacing:.01em; }
+  h1 { font-size:1.6rem; margin:0 0 2px; font-family:var(--serif); font-weight:400; letter-spacing:-.01em; }
   .sub { color:var(--mut); font-size:.85rem; margin-bottom:18px; }
   .row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
-  .seg { display:flex; background:var(--paper); border:3px solid var(--ink); border-radius:0; overflow:hidden; }
-  .seg button { background:none; border:0; border-right:2px solid var(--ink); color:var(--ink); padding:8px 14px; font-size:.78rem; font-family:'Bungee',sans-serif; letter-spacing:.03em; cursor:pointer; }
-  .seg button:last-child { border-right:0; }
-  .seg button.on { background:var(--orange); color:var(--cream); font-weight:400; }
+  .seg { display:flex; gap:6px; flex-wrap:wrap; }
+  .seg button { border:0; border-radius:999px; background:rgba(255,255,255,.12); color:var(--text);
+    padding:8px 14px; font-size:.8rem; font-family:var(--sans); font-weight:500; letter-spacing:.02em; cursor:pointer;
+    transition:background .2s; }
+  .seg button:hover { background:rgba(255,255,255,.2); }
+  .seg button.on { background:var(--text); color:var(--bg); }
   .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:14px; }
-  .kpi { background:var(--paper); border:3px solid var(--ink); border-radius:0; padding:12px 14px; }
-  .kpi .v { font-size:1.35rem; font-weight:700; font-variant-numeric:tabular-nums; }
+  .kpi { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:12px 14px; }
+  .kpi .v { font-size:1.35rem; font-weight:600; font-variant-numeric:tabular-nums; }
   .kpi .l { color:var(--mut); font-size:.75rem; margin-top:2px; }
   .v.long { color:var(--long); } .v.short { color:var(--short); }
-  .card { background:var(--paper); border:3px solid var(--ink); border-radius:0; padding:14px; margin-bottom:14px; }
-  .card h2 { font-size:.85rem; margin:0 0 10px; color:var(--ink); font-family:'Bungee',sans-serif; font-weight:400; letter-spacing:.04em; text-transform:uppercase; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:14px; margin-bottom:14px; }
+  .card h2 { font-size:1rem; margin:0 0 10px; color:var(--text); font-family:var(--serif); font-weight:400; letter-spacing:-.01em; }
   .note { color:var(--mut); font-size:.78rem; margin-top:8px; }
   table { width:100%; border-collapse:collapse; font-size:.82rem; }
-  th, td { text-align:right; padding:6px 8px; border-bottom:2px solid var(--line); font-variant-numeric:tabular-nums; }
+  th, td { text-align:right; padding:6px 8px; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums; }
   th:first-child, td:first-child { text-align:left; }
-  th { color:var(--cream); font-weight:400; font-family:'Bungee',sans-serif; font-size:.68rem; letter-spacing:.04em; background:var(--ink); }
-  .partial { color:var(--teal); font-size:.75rem; }
-  select#yearPick, select#monthPick { background:var(--paper); border:3px solid var(--ink); color:var(--ink);
-    border-radius:0; padding:8px 10px; font-size:.85rem; font-family:'Bungee',sans-serif; }
+  th { color:var(--mut); font-weight:500; font-family:var(--sans); font-size:.68rem; letter-spacing:.06em; text-transform:uppercase; }
+  tr:hover td { background:rgba(255,255,255,.03); }
+  .partial { color:var(--acc); font-size:.75rem; }
+  select#yearPick, select#monthPick { background:#242220; border:1px solid var(--border); color:var(--text);
+    border-radius:999px; padding:8px 12px; font-size:.8rem; font-family:var(--sans); }
   canvas { width:100% !important; }
   .chart-wrap { position:relative; height:280px; }
-  a { color:var(--orange); text-decoration:none; border-bottom:2px solid var(--orange); }
-  a:hover { color:var(--ink); border-color:var(--ink); }
+  a { color:var(--acc); text-decoration:none; border-bottom:1px solid var(--acc); }
+  a:hover { color:var(--text); border-color:var(--text); }
 </style>
 </head>
 <body>
@@ -229,15 +233,15 @@ async function render() {
 function draw(labels, longs, shorts) {
   if (chart) chart.destroy();
   chart = new Chart($('#chart'), {type:'bar', data:{labels, datasets:[
-    {label:'Largos', data:longs, backgroundColor:'#d9402f'},
-    {label:'Cortos', data:shorts, backgroundColor:'#35855a'}]},
+    {label:'Largos', data:longs, backgroundColor:'#df8c70'},
+    {label:'Cortos', data:shorts, backgroundColor:'#b6bc86'}]},
     options:{responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
-      scales:{x:{stacked:true, ticks:{color:'#7a6a58', maxTicksLimit:10}, grid:{display:false}},
-              y:{stacked:true, ticks:{color:'#7a6a58', callback:v=>fmt(v)}, grid:{color:'#e3d9c0'}}},
-      plugins:{legend:{labels:{color:'#2a170f'}},
+      scales:{x:{stacked:true, ticks:{color:'rgba(255,255,255,.56)', maxTicksLimit:10}, grid:{display:false}},
+              y:{stacked:true, ticks:{color:'rgba(255,255,255,.56)', callback:v=>fmt(v)}, grid:{color:'rgba(255,255,255,.08)'}}},
+      plugins:{legend:{labels:{color:'#f3f1ed'}},
         tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmt(c.parsed.y)}}}}});
 }
 boot().catch(e => { $('#upd').textContent = 'sin datos todavía — falta la API key de Coinalyze'; });
 </script>
 </body>
-                                     </html>
+</html>
