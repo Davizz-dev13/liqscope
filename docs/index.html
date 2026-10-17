@@ -171,9 +171,12 @@ async function render() {
   const mp = $('#monthPick');
   let L = pts.reduce((a,r) => a+r[1], 0), S = pts.reduce((a,r) => a+r[2], 0);
   let klabel = 'Total liquidado · ' + p.label.toLowerCase();
+  // en la vista Hora, si la hora cerrada aun no tiene punto en los datos
+  // (Coinalyze publica las horas con retraso), mostrar sin datos, no $0
+  const noData = p.id === '1h' && pts.length === 0;
   if (p.id === '1h') {
     const fmtH = t => new Date(t*1000).toLocaleString('es-ES', {timeZone:TZ, hour:'2-digit', minute:'2-digit'});
-    klabel = 'Hora cerrada ' + fmtH(curH - 3600) + '-' + fmtH(curH);
+    klabel = 'Hora cerrada ' + fmtH(curH - 3600) + '-' + fmtH(curH) + (noData ? ' · sin datos aún' : '');
   }
   let title = p.title, topGran = 'h';
 
@@ -205,11 +208,12 @@ async function render() {
     labels = cpts.map(r => dstr(r[0], 'd'));
     note = 'El último día puede estar en curso (parcial).';
   }
-  $('#kTotal').textContent = fmt(L+S);
+  $('#kTotal').textContent = noData ? '–' : fmt(L+S);
   $('#kTotalL').textContent = klabel;
-  $('#kLong').textContent = fmt(L); $('#kShort').textContent = fmt(S);
+  $('#kLong').textContent = noData ? '–' : fmt(L);
+  $('#kShort').textContent = noData ? '–' : fmt(S);
   const tot = L+S;
-  $('#kRatio').textContent = tot ? (100*L/tot).toFixed(0)+'% / '+(100*S/tot).toFixed(0)+'%' : '–';
+  $('#kRatio').textContent = (!noData && tot) ? (100*L/tot).toFixed(0)+'% / '+(100*S/tot).toFixed(0)+'%' : '–';
   $('#chartTitle').textContent = coin + ' · ' + title;
   $('#chartNote').textContent = note + ' Agregado de ' + d.exchanges + ' perpetuos.';
   draw(labels, cpts.map(r => r[1]), cpts.map(r => r[2]));
@@ -236,4 +240,4 @@ function draw(labels, longs, shorts) {
 boot().catch(e => { $('#upd').textContent = 'sin datos todavía — falta la API key de Coinalyze'; });
 </script>
 </body>
-</html>
+                                     </html>
