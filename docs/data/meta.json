@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-22T00:20:19+00:00",
+  "generated_at": "2026-10-22T00:30:36+00:00",
   "source": "Coinalyze API v1 (agregado de todos los exchanges por moneda)",
   "coins": [
     {
@@ -17,8 +17,8 @@
     {
       "coin": "SOL",
       "symbols": 19,
-      "hourly_points": 2383,
-      "daily_points": 1871
+      "hourly_points": 2384,
+      "daily_points": 1872
     },
     {
       "coin": "DOGE",
