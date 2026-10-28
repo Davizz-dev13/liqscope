@@ -1,35 +1,35 @@
 {
-  "generated_at": "2026-10-28T14:28:06+00:00",
+  "generated_at": "2026-10-28T16:04:11+00:00",
   "source": "Coinalyze API v1 (agregado de todos los exchanges por moneda)",
   "coins": [
     {
       "coin": "BTC",
       "symbols": 24,
-      "hourly_points": 2581,
+      "hourly_points": 2582,
       "daily_points": 2429
     },
     {
       "coin": "ETH",
       "symbols": 23,
-      "hourly_points": 2588,
+      "hourly_points": 2589,
       "daily_points": 2426
     },
     {
       "coin": "SOL",
       "symbols": 19,
-      "hourly_points": 2539,
+      "hourly_points": 2540,
       "daily_points": 1878
     },
     {
       "coin": "DOGE",
       "symbols": 21,
-      "hourly_points": 2342,
+      "hourly_points": 2343,
       "daily_points": 2231
     },
     {
       "coin": "XRP",
       "symbols": 21,
-      "hourly_points": 2489,
+      "hourly_points": 2490,
       "daily_points": 2402
     }
   ]
