@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-10-30T16:14:05+00:00",
+  "generated_at": "2026-10-30T16:24:22+00:00",
   "source": "Coinalyze API v1 (agregado de todos los exchanges por moneda)",
-  "daily_fetched_at_ts": 1793376269,
+  "daily_fetched_at_ts": 1793376855,
   "failed": [],
   "coins": [
     {
