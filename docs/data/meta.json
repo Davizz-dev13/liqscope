@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-11-04T06:54:28+00:00",
+  "generated_at": "2026-11-04T07:04:46+00:00",
   "source": "Coinalyze API v1 (agregado de todos los exchanges por moneda)",
-  "daily_fetched_at_ts": 1793774690,
+  "daily_fetched_at_ts": 1793775278,
   "failed": [],
   "coins": [
     {
@@ -31,7 +31,7 @@
     {
       "coin": "XRP",
       "symbols": 21,
-      "hourly_points": 2645,
+      "hourly_points": 2646,
       "daily_points": 2409
     }
   ]
