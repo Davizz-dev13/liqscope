@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-05T03:01:25+00:00",
+  "generated_at": "2026-11-05T03:28:32+00:00",
   "source": "Coinalyze API v1 (agregado de todos los exchanges por moneda)",
   "daily_fetched_at_ts": 1793846807,
   "failed": [],
@@ -7,19 +7,19 @@
     {
       "coin": "BTC",
       "symbols": 24,
-      "hourly_points": 2761,
+      "hourly_points": 2762,
       "daily_points": 2437
     },
     {
       "coin": "ETH",
       "symbols": 23,
-      "hourly_points": 2768,
+      "hourly_points": 2769,
       "daily_points": 2434
     },
     {
       "coin": "SOL",
       "symbols": 19,
-      "hourly_points": 2717,
+      "hourly_points": 2718,
       "daily_points": 1886
     },
     {
@@ -31,7 +31,7 @@
     {
       "coin": "XRP",
       "symbols": 21,
-      "hourly_points": 2665,
+      "hourly_points": 2666,
       "daily_points": 2410
     }
   ]
