@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-11-05T11:25:31+00:00",
+  "generated_at": "2026-11-05T11:35:45+00:00",
   "source": "Coinalyze API v1 (agregado de todos los exchanges por moneda)",
-  "daily_fetched_at_ts": 1793877355,
+  "daily_fetched_at_ts": 1793877941,
   "failed": [],
   "coins": [
     {
@@ -13,13 +13,13 @@
     {
       "coin": "ETH",
       "symbols": 23,
-      "hourly_points": 2776,
+      "hourly_points": 2777,
       "daily_points": 2434
     },
     {
       "coin": "SOL",
       "symbols": 19,
-      "hourly_points": 2725,
+      "hourly_points": 2726,
       "daily_points": 1886
     },
     {
