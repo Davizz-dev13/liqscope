@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-11-07T15:09:51+00:00",
+  "generated_at": "2026-11-07T15:56:32+00:00",
   "source": "Coinalyze API v1 (agregado de todos los exchanges por moneda)",
-  "daily_fetched_at_ts": 1794061879,
+  "daily_fetched_at_ts": 1794066418,
   "failed": [],
   "coins": [
     {
@@ -25,7 +25,7 @@
     {
       "coin": "DOGE",
       "symbols": 21,
-      "hourly_points": 2554,
+      "hourly_points": 2555,
       "daily_points": 2241
     },
     {
