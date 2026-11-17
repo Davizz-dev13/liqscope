@@ -118,7 +118,7 @@ async function loadMeta() {
 }
 async function boot() {
   const meta = await loadMeta();
-  coins = meta.coins.map(c => c.coin);
+  coins = ['BTC', 'ETH'].filter(c => meta.coins.some(m => m.coin === c));
   // con la pestana abierta, recargar datos cada 10 min (antes la cache no caducaba
   // y la vista Hora acababa en "sin datos" aunque el colector ya hubiera corrido)
   setInterval(async () => { try { cache = {}; await loadMeta(); render(); } catch (e) {} }, 10*60*1000);
