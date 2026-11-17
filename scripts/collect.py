@@ -24,7 +24,7 @@ from pathlib import Path
 
 API = os.environ.get("COINALYZE_API_URL", "https://api.coinalyze.net/v1")  # sobrescribible para pruebas locales
 KEY = os.environ.get("COINALYZE_API_KEY", "").strip()
-COINS = ["BTC", "ETH", "SOL", "DOGE", "XRP"]
+COINS = ["BTC", "ETH"]
 DATA = Path("docs/data")
 BACKFILL_SECONDS = 62 * 86400
 DAILY_SINCE = 1567296000  # 2019-09-01, arranque de los perps de BTC
