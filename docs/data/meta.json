@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-20T18:07:21+00:00",
+  "generated_at": "2026-11-20T18:45:01+00:00",
   "source": "Coinalyze API v1 (agregado de todos los exchanges por moneda)",
   "daily_fetched_at_ts": 1795197802,
   "failed": [],
@@ -7,7 +7,7 @@
     {
       "coin": "BTC",
       "symbols": 24,
-      "hourly_points": 3136,
+      "hourly_points": 3137,
       "daily_points": 2452
     },
     {
