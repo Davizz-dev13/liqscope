@@ -1,19 +1,19 @@
 {
-  "generated_at": "2026-11-21T15:44:44+00:00",
+  "generated_at": "2026-11-21T16:57:58+00:00",
   "source": "Coinalyze API v1 (agregado de todos los exchanges por moneda)",
-  "daily_fetched_at_ts": 1795275646,
+  "daily_fetched_at_ts": 1795280041,
   "failed": [],
   "coins": [
     {
       "coin": "BTC",
       "symbols": 24,
-      "hourly_points": 3158,
+      "hourly_points": 3159,
       "daily_points": 2453
     },
     {
       "coin": "ETH",
       "symbols": 23,
-      "hourly_points": 3165,
+      "hourly_points": 3166,
       "daily_points": 2450
     }
   ]
